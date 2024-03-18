@@ -1,0 +1,112 @@
+﻿Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+f.Intrinsic.Control.Try
+	v.Local.sXML.Declare(String)
+	v.Local.sTempFolderXML.Declare(String)
+	'v.Local.iCon.Declare(Long)
+	v.Local.bFileExists.Declare(Boolean)
+	v.Local.bTempFileExists.Declare(Boolean)
+	v.Local.sQuery.Declare(String)
+	v.Local.sError.Declare(String)
+	v.Local.bUseRevision.Declare(Boolean)
+	v.Local.dXML_DateTime.Declare
+	v.Local.dTempFolderXML_DateTime.Declare
+
+	
+	'f.Intrinsic.String.Build("{0}\Cache\Custom\InventoryBrowserCacheData_{1}.ser",v.Caller.FilesDir,v.Caller.CompanyCode,v.Local.sXML)
+	'f.Intrinsic.File.Exists(v.Local.sXML,V.Local.bFileExists)
+	'f.Intrinsic.Control.If(v.Local.bFileExists.Not)
+	'	'Create the cache browser file
+	'	f.Intrinsic.Control.If(v.DataTable.dtInventoryBrowser.Exists)
+	'		f.Data.Datatable.Close("dtInventoryBrowser")
+	'	f.Intrinsic.Control.EndIf
+	'	
+	'	'Create Object Database connection
+	'	F.Global.Object.CreateDB("oDatabase",V.Caller.CompanyCode,V.Ambient.DBServerName,True,v.Local.iCon)
+	
+	'	'Generate InventoryBrowser XML file
+	'	f.Global.Object.Create("oParts","Inventory.Parts","oDatabase",v.Local.iCon,True)
+	'	f.Global.Object.Create("oExtraTextParts","Inventory.Support.ExtraTexts","oDatabase",V.Local.iCon,True)
+	'	f.Data.Linq.Join("LEFTJOIN","OBJECT","oParts*!*P",1286,"","","~~~~~~~~~~~~~~~~~","~~~","OBJECT","oExtraTextParts*!*E",3,"","","~~~~~~~~~~~~~~~~~","~~~","P.PartNumber = E.PartNumber AND P.PartNumberRevision = E.PartNumberRevision","P.PartNumber As PartNumber*!*P.PartNumberRevision As PartNumberRev*!*P.LocationCode As PartLoc*!*P.Information.ProductLine.ProductLineCode As ProdLine*!*P.Description.Primary As Description*!*P.Description.Alternate1 As Description1*!*P.Description.Alternate2 As Description2*!*E.Information.Comment As Text*!*P.Information.UnitOfMeasure.UnitOfMeasureCode As UM_INVENTORY*!*P.InventoryStatus.OnHand As OnHand_Qty*!*P.Scheduling.LeadTime As LeadTime*!*P.Cost.MonetaryValue.Company.Unit As Cost*!*P.Cost.Alternate.MonetaryValue.Company.Unit As AltCost","","","","dtInventoryBrowser",True)
+	''	f.Data.Linq.Join("LEFTJOIN","OBJECT","oParts*!*P",1286,"","","~~~~~~~~~~~~~~~~~","~~~","OBJECT","oExtraTextParts*!*E",3,"","","~~~~~~~~~~~~~~~~~","~~~","P.PartNumber = E.PartNumber AND P.PartNumberRevision = E.PartNumberRevision","P.PartNumber As PartNumber*!*P.PartNumberRevision As PartNumberRevision*!*P.LocationCode As Location Code*!*P.Information.ProductLine.ProductLineCode As ProdLine*!*P.Description.Primary As Description*!*P.Description.Alternate1 As Description1*!*P.Description.Alternate2 As Description2*!*E.Information.Comment As Text*!*P.Information.UnitOfMeasure.UnitOfMeasureCode As UM_INVENTORY*!*P.InventoryStatus.OnHand As OnHand_Qty*!*P.Scheduling.LeadTime As LeadTime*!*P.Cost.MonetaryValue.Company.Unit As Cost*!*P.Cost.Alternate.MonetaryValue.Company.Unit As AltCost","","","","dtInventoryBrowser",True)
+	'	f.Global.Object.Dispose("oParts")
+	'	f.Global.Object.Dispose("oExtraTextParts")
+	'	f.Global.object.ExportTOMessagePackFile(v.Local.sXML,"dtInventoryBrowser")
+	'	F.Data.DataTable.Close("dtInventoryBrowser")
+	'	
+	'	f.Global.Object.CloseConnection("oDatabase",v.Local.iCon)
+	'f.Intrinsic.Control.EndIf
+		
+	f.Intrinsic.String.Build("{0}\Cache\Custom\6461\InventoryBrowserCacheData_{1}.ser",v.Caller.FilesDir,v.Caller.CompanyCode,v.Local.sXML)
+	f.Intrinsic.File.Exists(v.Local.sXML,V.Local.bFileExists)
+	f.Intrinsic.Control.If(v.Local.bFileExists.Not)
+		'Create the cache browser file
+		f.Intrinsic.Control.If(v.DataTable.dtInventoryBrowser.Exists)
+			f.Data.Datatable.Close("dtInventoryBrowser")
+		f.Intrinsic.Control.EndIf
+		
+		'Get whether using Revision Level
+		F.Global.General.ReadOption(70008,0,False,0,v.Local.bUseRevision)
+	
+		'Open database connection
+		f.ODBC.Connection!con.OpenCompanyConnection(120)
+		
+		'Generate InventoryBrowser XML file
+		f.Intrinsic.Control.If(V.Local.bUseRevision)
+			v.Local.sQuery.Set("select DISTINCT SUBSTRING(VIA.PART, 1, 17) AS 'PartNumber', SUBSTRING(VIA.PART, 18, 3) AS 'PartNumberRevision', VIA.LOCATION AS 'LocationCode', VIA.DESCRIPTION AS 'Description', RTRIM(CONVERT(REPLACE(REPLACE(REPLACE(VIET.TEXT,Char(10),' '),Char(13),' '),Char(9),' '),SQL_VARCHAR,1000)) AS 'Extra Description', CASE WHEN VIA.CODE_SOURCE = 'M' THEN 'MS' WHEN VIA.CODE_SOURCE = 'F' THEN 'MJ' WHEN VIA.CODE_SOURCE = 'P' THEN 'PS' WHEN VIA.CODE_SOURCE = 'J' THEN 'PJ' WHEN VIA.CODE_SOURCE = 'C' THEN 'CS' WHEN VIA.CODE_SOURCE = 'G' THEN 'CJ' END AS 'Source Code', VIA.UM_INVENTORY As 'UM', VIA.PRODUCT_LINE As 'Product Line', VIA.CODE_SORT As 'Sort Code', CASE WHEN VIA.FLAG_INACTIVE = 'Y' THEN CONVERT(1,SQL_BIT) WHEN VIA.FLAG_INACTIVE <> 'Y' THEN CONVERT(0,SQL_BIT) END AS 'Is Inactive', VIA.QTY_ONHAND As 'On Hand', SUBSTRING(VIA.PART, 1, 17) AS 'PartNumberKey', SUBSTRING(VIA.PART, 18, 3) AS 'PartNumberKeyRevision' from V_INVENTORY_ALL VIA LEFT JOIN V_INV_EXTRA_TEXT VIET ON VIA.PART = VIET.PART order by VIA.PART, VIA.LOCATION;")	
+		f.Intrinsic.Control.Else
+			v.Local.sQuery.Set("select DISTINCT VIA.PART AS 'PartNumber', VIA.LOCATION AS 'LocationCode', VIA.DESCRIPTION AS 'Description', RTRIM(CONVERT(REPLACE(REPLACE(REPLACE(VIET.TEXT,Char(10),' '),Char(13),' '),Char(9),' '),SQL_VARCHAR,1000)) AS 'Extra Description', CASE WHEN VIA.CODE_SOURCE = 'M' THEN 'MS' WHEN VIA.CODE_SOURCE = 'F' THEN 'MJ' WHEN VIA.CODE_SOURCE = 'P' THEN 'PS' WHEN VIA.CODE_SOURCE = 'J' THEN 'PJ' WHEN VIA.CODE_SOURCE = 'C' THEN 'CS' WHEN VIA.CODE_SOURCE = 'G' THEN 'CJ' END AS 'Source Code', VIA.UM_INVENTORY As 'UM', VIA.PRODUCT_LINE As 'Product Line', VIA.CODE_SORT As 'Sort Code', CASE WHEN VIA.FLAG_INACTIVE = 'Y' THEN CONVERT(1,SQL_BIT) WHEN VIA.FLAG_INACTIVE <> 'Y' THEN CONVERT(0,SQL_BIT) END AS 'Is Inactive', VIA.QTY_ONHAND As 'On Hand', VIA.PART As 'PartNumberKey' from V_INVENTORY_ALL VIA LEFT JOIN V_INV_EXTRA_TEXT VIET ON VIA.PART = VIET.PART order by VIA.PART, VIA.LOCATION;")	
+		f.Intrinsic.Control.EndIf
+		f.Data.DataTable.CreateFromSQL("dtInventoryBrowser","con",V.Local.sQuery)
+		f.Global.object.ExportTOMessagePackFile(v.Local.sXML,"dtInventoryBrowser")
+		F.Data.DataTable.Close("dtInventoryBrowser")
+		
+		'Close database connection
+		f.Intrinsic.Control.If(V.ODBC.con.State,=,1)
+			f.ODBC.Connection!con.close
+		f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.EndIf
+	
+	f.Intrinsic.String.Build("{0}\InventoryBrowserCacheData_{1}.ser",v.Caller.LocalGSSTempDir,v.Caller.CompanyCode,v.Local.sTempFolderXML)
+	f.Intrinsic.File.Exists(v.Local.sTempFolderXML,v.Local.bTempFileExists)
+	
+	f.Intrinsic.File.Exists(v.Local.sXML,V.Local.bFileExists)
+	
+	f.Intrinsic.Control.If(v.Local.bTempFileExists)
+		f.Intrinsic.File.GetFileDateTime(v.Local.sTempFolderXML,v.Local.dTempFolderXML_DateTime)
+		f.Intrinsic.Control.If(v.Local.bFileExists)
+			f.Intrinsic.File.GetFileDateTime(v.Local.sXML,v.Local.dXML_DateTime)
+			f.Intrinsic.Control.If(v.Local.dXML_DateTime,>,v.Local.dTempFolderXML_DateTime)
+				f.Intrinsic.File.DeleteFile(v.Local.sTempFolderXML)
+				f.Intrinsic.File.CopyOpenFile(v.Local.sXML,v.Local.sTempFolderXML)
+			f.Intrinsic.Control.EndIf
+		f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.Else
+		f.Intrinsic.Control.If(v.Local.bFileExists)
+			f.Intrinsic.File.CopyOpenFile(v.Local.sXML,v.Local.sTempFolderXML)
+		f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.EndIf
+	
+	'Set to the Standar Part Lookup in new S&D screen (Hook: 55300)
+	v.Passed.Title.Set("Inventory Standard Browser (6461)")
+'	v.Passed.FilePath.Set(v.Local.sXML)
+	v.Passed.FilePath.Set(v.Local.sTempFolderXML)
+	
+	f.Intrinsic.Control.End
+
+f.Intrinsic.Control.Catch
+	f.Intrinsic.String.Build("Project: {0}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}GAB Version: {5}}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	f.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.If(V.ODBC.con.State,=,1)
+		f.ODBC.Connection!con.close
+	f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.End
+f.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.Comments.Start
+${$5$}$20.1.8693.27812$}$1
+${$6$}$tdjohan$}$20231027165832811$}$8rAQhOSvlohpQhMDm1j544LwmwXnRbkhPRYlhqharx0JNN6Sfpyk4l5i4Wku4hZ56muypMdLBPI=
+Program.Sub.Comments.End
